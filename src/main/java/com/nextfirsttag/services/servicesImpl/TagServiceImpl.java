@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.nextfirsttag.entities.SelectedTag;
 import com.nextfirsttag.entities.Tag;
@@ -37,10 +38,18 @@ public class TagServiceImpl implements TagService {
         }
         return response;       
     }
+    @Transactional
     @Override
     public void saveSelectedTags(List<String> selectedTags) {
-        List<SelectedTag> tags = selectedTags.stream().map(tag -> new SelectedTag(tag)).collect(Collectors.toList());
-        selectedTagRepository.saveAll(tags);
+        try {
+            List<SelectedTag> tags = selectedTags.stream()
+                                                 .map(tag -> new SelectedTag(tag))
+                                                 .collect(Collectors.toList());
+            selectedTagRepository.saveAll(tags);
+        } catch (Exception e) {
+            // e.printStackTrace(); // You might want to use a logger instead
+            throw new RuntimeException("Failed to save tags to the database", e);
+        }
     }
 
     @Override

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nextfirsttag.entities.SelectedTag;
-import com.nextfirsttag.entities.Tag;
 import com.nextfirsttag.services.TagService;
 
 @RestController
@@ -30,12 +30,12 @@ public class TagController {
         return tagService.getAllTags();
     }
 
-     @PostMapping("/saveSelectedTags")
-     @CrossOrigin("*")
-    public ResponseEntity<Void> saveSelectedTags(@RequestBody Map<String, List<String>> request) {
+    @PostMapping("/saveSelectedTags")
+    @CrossOrigin("*")
+    public ResponseEntity<Map<String, String>> saveSelectedTags(@RequestBody Map<String, List<String>> request) {
         List<String> selectedTags = request.get("tags");
         tagService.saveSelectedTags(selectedTags);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("message", "Selected tags shifted to database successfully"));
     }
 
     @GetMapping("/getSavedTags")
