@@ -17,44 +17,54 @@ import com.nextfirsttag.services.TagService;
 
 @Service
 public class TagServiceImpl implements TagService {
-   
     private final TagRepository tagRepository;
     private final SelectedTagRepository selectedTagRepository;
-        
+
     public TagServiceImpl(TagRepository tagRepository, SelectedTagRepository selectedTagRepository) {
         this.tagRepository = tagRepository;
         this.selectedTagRepository = selectedTagRepository;
-       
     }
 
     @Override
-    public Map<String, List<String>> getAllTags() {
+    public Map<String, List<String>> getAllTags() throws TagNotFoundException {
         List<Tag> tags = tagRepository.findAll();
         List<String> tagNames = tags.stream().map(Tag::getTags).collect(Collectors.toList());
-        Map<String, List<String>> response = new HashMap<>();
-        response.put("tags", tagNames);
-        if (response.isEmpty()) {
+        if (tagNames.isEmpty()) {
             throw new TagNotFoundException("No tags found");
         }
+        Map<String, List<String>> response = new HashMap<>();
+        response.put("tags", tagNames);
         return response;       
     }
+
     @Transactional
     @Override
-    public void saveSelectedTags(List<String> selectedTags) {
+    public void saveSelectedTags(List<String> selectedTags) throws RuntimeException {
         try {
             List<SelectedTag> tags = selectedTags.stream()
                                                  .map(tag -> new SelectedTag(tag))
                                                  .collect(Collectors.toList());
             selectedTagRepository.saveAll(tags);
         } catch (Exception e) {
-            // e.printStackTrace(); // You might want to use a logger instead
             throw new RuntimeException("Failed to save tags to the database", e);
         }
     }
 
     @Override
-    public List<SelectedTag> getSavedTags() {
-        // Fetch saved tags from the database
-        return selectedTagRepository.findAll();
+    public List<SelectedTag> getSavedTags() throws TagNotFoundException {
+        List<SelectedTag> savedTags = selectedTagRepository.findAll();
+        if (savedTags.isEmpty()) {
+            throw new TagNotFoundException("No saved tags found");
+        }
+        return savedTags;
+    }
+
+    @Override
+    public void deleteTags(List<String> tags) throws RuntimeException {
+        try {
+            selectedTagRepository.deleteByTagsIn(tags);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete tags from the database", e);
+        }
     }
 }
